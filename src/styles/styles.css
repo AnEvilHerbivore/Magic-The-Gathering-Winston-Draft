@@ -1,0 +1,26 @@
+section {
+    display: inline-block;
+    margin-right: 20px;
+    margin-bottom: 50px;
+    border: solid black 5px;
+    padding: 10px;
+    padding-bottom: inherit;
+    border-radius: 25px;
+}
+
+h1 {
+    text-align: center;
+}
+
+textarea {
+    height: 300px;
+    width: 200px;
+}
+
+img{
+    margin: 10px;
+}
+
+input {
+    margin-bottom: 20px;
+}
