@@ -1,19 +1,74 @@
+html {
+    font-family: 'Spectral';
+    height: 100%
+}
+
+body {
+    background-color: #43270f;
+    background-image: url("../img/BackgroundTexture.png");
+    background-position: center;
+    background-repeat: repeat;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: #eece5d;
+    text-shadow: 
+        -1px -1px 0px #de1920,
+        1px -1px 0px #de1920,
+        -1px 1px 0px #de1920,
+        1px 1px 0px #de1920;
+}
+
+#backgroundTexture {
+    opacity: .30;
+    position: absolute;
+    height:100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    left: 0;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+
+
 section {
-    display: inline-block;
-    margin-right: 20px;
-    margin-bottom: 50px;
-    border: solid black 5px;
+    border: solid black 3px;
     padding: 10px;
     padding-bottom: inherit;
     border-radius: 25px;
 }
 
+.cardPile {
+    display: inline-block;
+    background-image: url("../img/CardBackgroundTexture.png");
+    background-position: center;
+    background-repeat: repeat;
+    background-size: cover;
+}
+
 h1 {
     text-align: center;
+    margin: 0;
+    z-index: 0;
 }
+
 
 textarea {
     height: 300px;
+    background-color: white;
     width: 200px;
 }
 
@@ -23,4 +78,68 @@ img{
 
 input {
     margin-bottom: 20px;
+}
+
+.cardPiles {
+    display: block;
+}
+
+.cardPile {
+    min-height: 300px;
+    background-color: #6494c5;
+    margin: 10px;
+}
+
+.cardPile h4 {
+    text-align: center;
+    margin: 0;
+}
+
+form input {
+    display: block;
+    width: 200px;
+    height: 50px;
+    border-radius: 25px;
+
+}
+
+#selectionArea {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: stretch;
+}
+
+#cardImageSection {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    border: none;
+
+}
+
+#pileDisplaySection, #userHand{
+    background-image: url("../img/CardBackgroundTexture.png");
+    background-position: center;
+    background-repeat: repeat;
+    background-size: cover;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+#pileDisplayBtns {
+    display: flex;
+    justify-content: center;
+    border: none;
+}
+
+#pileDisplaySection section {
+    margin-bottom: 0;
+}
+
+#newDraftBtn {
+    margin-top: 20px;
+    height: 2em;
+    width: 8em;
 }

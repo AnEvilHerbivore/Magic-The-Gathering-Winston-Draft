@@ -1,16 +1,11 @@
 const mtg = require("mtgsdk")
-const body = document.querySelector("body")
+const body = $("#content")
 let totalCardArray = []
 let pile1 = []
 let pile2 = []
 let pile3 = []
+let userHand = []
 
-
-function addIMG (url) {
-    const newIMG = document.createElement("img")
-    newIMG.src = url
-    return newIMG
-}
 
 function cardURLLookup (cardName) {
     return new Promise((resolve, reject) => {
@@ -18,16 +13,11 @@ function cardURLLookup (cardName) {
         .then(result => {
             resolve(result.find(element => {
                 return element.imageUrl && element.name === cardName
-            })); // "Black Lotus
+            }));
         })
     })
 }
 
-function totalCardList (cardObject) {
-    if (cardObject) {
-        totalCardArray.push(cardObject)
-    }
-}
 
 function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
@@ -37,18 +27,26 @@ function shuffle(a) {
     return a;
 }
 
-const cardListArea = document.querySelector("#cardList")
-const searchButton = document.querySelector("#searchButton")
+const cardListArea = $("#cardList")
+const searchButton = $("#searchButton")
 
 
 
-function addCardToPile (arrayOfCards, pileToAddTo) {
-    pileToAddTo.push(arrayOfCards.shift())
+function addCardToPile (pileToAddTo) {
+    if (totalCardArray.length !== 0) {
+        pileToAddTo.push(totalCardArray.shift())
+        if (totalCardArray.length === 0) {
+            $("#library img").css("visibility", "hidden")
+            $("#library h4").fadeIn()
+        }
+    }
 }
 
-searchButton.addEventListener("click", function () {
+searchButton.click (function () {
+    body.append("<h1>Working...<h1>")
+    $("form").hide()
     let promises = []
-    let cardList = cardListArea.value.trim()
+    let cardList = cardListArea.val().trim()
     cardList = cardList.split("\n")
     cardList.forEach(element => {
         element = element.trim()
@@ -65,124 +63,178 @@ searchButton.addEventListener("click", function () {
 
         promises.push(cardURLLookup(element).then(cardObj => {
             // frag.appendChild(addIMG(cardObj.imageUrl));
-            totalCardList(cardObj)
+            return cardObj
         }))
     });
     Promise.all(promises).then(function(values){
-        // body.appendChild(frag)
+        $("body h1").remove()
+        totalCardArray = values
         totalCardArray = shuffle(totalCardArray)
-        addCardToPile(totalCardArray, pile1)
-        addCardToPile(totalCardArray, pile2)
-        addCardToPile(totalCardArray, pile3)
+        addCardToPile(pile1)
+        addCardToPile(pile2)
+        addCardToPile(pile3)
         makePileUI()
     })
-
-
-    // console.log(shuffle(totalCardArray))
 })
 
 
 function pileClick () {
-    const pileDisplaySection = document.createElement("section")
-    const pilePicturesDiv = document.createElement("div")
-    const pileDisplayHeader = document.createElement("h1")
-    const takePileButton = document.createElement("input")
-    const closePileButton = document.createElement("input")
-    let pileActivated
-    switch (this.id) {
-        case "pile1":
+    if ($(this).children("img").css("visibility") === "visible") {
+        $("#pileDisplaySection").remove()
+        $("#newDraftBtn").after("<section id='pileDisplaySection'></section>")
+        const pileDisplaySection = $("#pileDisplaySection")
+        let pileActivated
+        switch (this.id) {
+            case "pile1":
             pileActivated = pile1
-            pileDisplayHeader.textContent = "Pile 1"
+            pileDisplaySection.append("<h1>Pile 1</h1>")
+            $("#pileDisplaySection").addClass("pile1")
             break;
-        case "pile2":
+            case "pile2":
             pileActivated = pile2
-            pileDisplayHeader.textContent = "Pile 2"
+            pileDisplaySection.append("<h1>Pile 2</h1>")
+            $("#pileDisplaySection").addClass("pile2")
             break;
-        case "pile3":
+            case "pile3":
             pileActivated = pile3
-            pileDisplayHeader.textContent = "Pile 3"
+            pileDisplaySection.append("<h1>Pile 3</h1>")
+            $("#pileDisplaySection").addClass("pile3")
             break;
-        case "library":
-            pileActivated = totalCardArray
-            pileDisplayHeader.textContent = "Library"
-            break;
+            case "library":
+            return
         }
-    pileDisplaySection.appendChild(pileDisplayHeader)
-    pileActivated.forEach(element => {
-        pilePicturesDiv.appendChild(addIMG(element.imageUrl))
-    });
-    pileDisplaySection.appendChild(pilePicturesDiv)
 
+        pileDisplaySection.append("<section id='cardImageSection' class='cardPiles'></section>")
+        const cardImageSection = $("#cardImageSection")
 
-    takePileButton.value = "Take Pile"
-    closePileButton.value = "Close Pile"
-
-    takePileButton.type = "button"
-    closePileButton.type = "button"
-
-    closePileButton.addEventListener("click", closePile)
-
-
-    pileDisplaySection.appendChild(takePileButton)
-    pileDisplaySection.appendChild(closePileButton)
+        // pileDisplaySection.appendChild(pileDisplayHeader)
+        pileActivated.forEach(element => {
+            cardImageSection.append(`<img src = '${element.imageUrl}' alt = '${element.name}' draggable='false'></img> `)
+        });
 
 
 
-    body.insertBefore(pileDisplaySection, body.childNodes[0])
+        pileDisplaySection.append("<section id='pileDisplayBtns'><input type='button' value='Take Pile' class='takePileBtn'><input type='button' value='Close Pile' class='closePileBtn'></section>")
+
+        $(".closePileBtn").click(closePile)
+        $(".takePileBtn").click(takePile)
+    }
 }
 
+function displayUserHand () {
+    userHandSection = $("#userHand")
+    userHandSection.remove()
+    $("#content").append(
+        `<section id="userHand">
+            <h1>Hand</h1>
+        </section>`
+    )
+    userHand.forEach(element => {
+        $("#userHand").append(`<img src = '${element.imageUrl}' alt = '${element.name}' draggable='false'>`)
+    })
+}
 
 function closePile () {
-    event.target.parentElement.remove()
+    $("#pileDisplaySection").remove()
 }
 
+function takePile () {
+    let $currentSection = $(this)
+    if ($currentSection.parent().parent().hasClass("pile1")) {
+        userHand = userHand.concat(pile1)
+        pile1 = []
+        addCardToPile(pile1)
+        closePile()
+        if (pile1.length === 0) {
+            $("#pile1 img").css("visibility", "hidden")
+        }
+    } else if ($currentSection.parent().parent().hasClass("pile2")) {
+        userHand = userHand.concat(pile2)
+        pile2 = []
+        addCardToPile(pile2)
+        closePile()
+        if (pile2.length === 0) {
+            $("#pile2 img").css("visibility", "hidden")
+        }
+    } else if ($currentSection.parent().parent().hasClass("pile3")) {
+        userHand = userHand.concat(pile3)
+        pile3 = []
+        addCardToPile(pile3)
+        closePile()
+        if (pile3.length === 0) {
+            $("#pile3 img").css("visibility", "hidden")
+        }
+    }
+    displayUserHand()
+}
 
 function makePileUI () {
-    const frag = document.createDocumentFragment()
-    const librarySection = document.createElement("section")
-    const pile1Section = document.createElement("section")
-    const pile2Section = document.createElement("section")
-    const pile3Section = document.createElement("section")
 
-    librarySection.appendChild(addIMG("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card"))
-    pile1Section.appendChild(addIMG("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card"))
-    pile2Section.appendChild(addIMG("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card"))
-    pile3Section.appendChild(addIMG("http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card"))
+    body.append("<div id='selectionArea'></div>")
 
-    const libraryHeader = document.createElement("h1")
-    const pile1Header = document.createElement("h1")
-    const pile2Header = document.createElement("h1")
-    const pile3Header = document.createElement("h1")
+    const selectionArea = $("#selectionArea")
 
-    libraryHeader.textContent = "Library"
-    pile1Header.textContent = "Pile 1"
-    pile2Header.textContent = "Pile 2"
-    pile3Header.textContent = "Pile 3"
+    selectionArea.prepend("<section class=\"cardPile clickable\" id=\"pile3\"><h1>Pile 3</h1><img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
-    librarySection.addEventListener("click", pileClick)
-    pile1Section.addEventListener("click", pileClick)
-    pile2Section.addEventListener("click", pileClick)
-    pile3Section.addEventListener("click", pileClick)
+    selectionArea.prepend("<section class=\"cardPile clickable\" id=\"pile2\"><h1>Pile 2</h1><img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
 
-    librarySection.appendChild(libraryHeader)
-    pile1Section.appendChild(pile1Header)
-    pile2Section.appendChild(pile2Header)
-    pile3Section.appendChild(pile3Header)
-
-    librarySection.id = "library"
-    pile1Section.id = "pile1"
-    pile2Section.id = "pile2"
-    pile3Section.id = "pile3"
+    selectionArea.prepend("<section class=\"cardPile clickable\" id=\"pile1\"><h1>Pile 1</h1><img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
 
+    selectionArea.prepend("<section class=\"cardPile\" id=\"library\">\n<h1>Library</h1><img src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
-    frag.appendChild(librarySection)
-    frag.appendChild(pile1Section)
-    frag.appendChild(pile2Section)
-    frag.appendChild(pile3Section)
 
-    body.insertBefore(frag, body.childNodes[0])
-    // body.appendChild(frag)
+    body.prepend("<input type='button' value='New Draft' id='newDraftBtn'>")
+
+    $(".clickable").click(pileClick)
+    $("#newDraftBtn").click(function () {
+        $("#selectionArea").empty()
+        $("form").show()
+        $("#userHand").remove()
+        closePile()
+        pile1 = []
+        pile2 = []
+        pile3 = []
+        totalCardArray = []
+        userHand = []
+    })
+    DragDropManager()
 }
 
+
+
+function DragDropManager () {
+    const pile1Section = document.querySelector("#pile1")
+    pile1Section.ondragover = event => {
+        event.preventDefault()
+    }
+    pile1Section.ondrop = event => {
+        event.preventDefault()
+        addCardToPile(pile1)
+        M.toast({html: "Card Added To Pile 1", classes: "move"})
+        closePile()
+    }
+
+    const pile2Section = document.querySelector("#pile2")
+    pile2Section.ondragover = event => {
+        event.preventDefault()
+    }
+    pile2Section.ondrop = event => {
+        event.preventDefault()
+        addCardToPile(pile2)
+        M.toast({html: "Card Added To Pile 2", classes: "move"})
+        closePile()
+    }
+
+    const pile3Section = document.querySelector("#pile3")
+    pile3Section.ondragover = event => {
+        event.preventDefault()
+    }
+    pile3Section.ondrop = event => {
+        event.preventDefault()
+        addCardToPile(pile3)
+        M.toast({html: "Card Added To Pile 3", classes: "move"})
+        closePile()
+    }
+}

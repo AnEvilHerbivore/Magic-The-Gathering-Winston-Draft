@@ -7,6 +7,7 @@ module.exports = function (grunt) {
                 files: [
                     "./scripts/**/*.js",
                     "./styles/**/*.css",
+                    "./img/**/*.png",
                     "./index.html",
                     "!node_modules/**/*.js"
                 ],
@@ -35,11 +36,12 @@ module.exports = function (grunt) {
                 // includes files within path
                 {expand: true, src: ["index.html"], dest: "../dist", filter: "isFile"},
                 {expand: true, src: ["styles/*.css"], dest: "../dist/", filter: "isFile"},
+                {expand: true, src: ["img/*.png"], dest: "../dist/", filter: "isFile"},
               ],
             },
           },
         uglify: {
-            
+
             build: {
                 files: [{
                     expand: true,
