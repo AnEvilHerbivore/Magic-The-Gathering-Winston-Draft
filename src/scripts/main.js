@@ -1,5 +1,77 @@
 const mtg = require("mtgsdk")
 const body = $("#content")
+const FileSaver = require('file-saver');
+
+var pubnub = new PubNub({
+    subscribeKey: 'sub-c-c1435070-69c3-11e8-9683-aecdde7ceb31', // always required
+    publishKey: 'pub-c-9266a6ef-5936-4c7c-8b2a-3b15287b986b' // only required if publishing
+});
+
+
+pubnub.publish(
+    {
+        message: {
+            title: "THIS IS A TEST",
+            description: "Test"
+        },
+        channel: 'MagicWinston'
+    },
+    function (status, response) {
+        if (status.error) {
+            console.log(status)
+        } else {
+            console.log("message Published w/ timetoken", response.timetoken)
+        }
+    }
+);
+
+
+pubnub.addListener({
+    status: function(statusEvent) {
+        if (statusEvent.category === "PNConnectedCategory") {
+            publishSampleMessage()
+        } else if (statusEvent.category === "PNUnknownCategory") {
+            var newState = {
+                new: 'error'
+            };
+            pubnub.setState(
+                {
+                    state: newState
+                },
+                function (status) {
+                    console.log(statusEvent.errorData.message)
+                }
+            );
+        }
+    },
+    message: function(msg) {
+        console.log(msg.message.title);
+        console.log(msg.message.description)
+    }
+})
+
+pubnub.subscribe({
+    channels: ['MagicWinston']
+});
+
+function publishSampleMessage() {
+    var publishConfig = {
+        channel : "hello_world",
+        message: {
+            title: "greeting",
+            description: "hello world!"
+        }
+    }
+    pubnub.publish(publishConfig, function(status, response) {
+        console.log(status, response);
+    })
+}
+
+
+
+
+
+
 let totalCardArray = []
 let pile1 = []
 let pile2 = []
@@ -67,6 +139,12 @@ searchButton.click (function () {
         }))
     });
     Promise.all(promises).then(function(values){
+        let cardNames = []
+        values.forEach(card =>{
+            cardNames.push(card.name)
+        })
+        // let blob = new Blob([cardNames.join("\n")], {type: "text/plain;charset=utf-8"});
+        // FileSaver.saveAs(blob, "test.txt");
         $("body h1").remove()
         totalCardArray = values
         totalCardArray = shuffle(totalCardArray)
