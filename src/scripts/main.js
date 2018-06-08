@@ -1,35 +1,22 @@
 const mtg = require("mtgsdk")
 const body = $("#content")
 const FileSaver = require('file-saver');
+let totalCardArray = []
+let pile1 = []
+let pile2 = []
+let pile3 = []
+let userHand = []
+let pilesVisible = false
 
 var pubnub = new PubNub({
-    subscribeKey: 'sub-c-c1435070-69c3-11e8-9683-aecdde7ceb31', // always required
-    publishKey: 'pub-c-9266a6ef-5936-4c7c-8b2a-3b15287b986b' // only required if publishing
+    subscribeKey: 'sub-c-f4c9f094-6a7b-11e8-98cb-067913ebee63',
+    publishKey: 'pub-c-658b3a02-beac-4112-a315-443574de6422'
 });
-
-
-pubnub.publish(
-    {
-        message: {
-            title: "THIS IS A TEST",
-            description: "Test"
-        },
-        channel: 'MagicWinston'
-    },
-    function (status, response) {
-        if (status.error) {
-            console.log(status)
-        } else {
-            console.log("message Published w/ timetoken", response.timetoken)
-        }
-    }
-);
 
 
 pubnub.addListener({
     status: function(statusEvent) {
         if (statusEvent.category === "PNConnectedCategory") {
-            publishSampleMessage()
         } else if (statusEvent.category === "PNUnknownCategory") {
             var newState = {
                 new: 'error'
@@ -45,8 +32,22 @@ pubnub.addListener({
         }
     },
     message: function(msg) {
-        console.log(msg.message.title);
-        console.log(msg.message.description)
+        if (msg.message.title === "library") {
+            totalCardArray = msg.message.description
+            if (pilesVisible ===false) {
+                makePileUI()
+                $("form").hide()
+            }
+        } else if (msg.message.title === "pile1") {
+            pile1 = msg.message.description
+            closePile()
+        } else if (msg.message.title === "pile2") {
+            pile2 = msg.message.description
+            closePile()
+        } else if (msg.message.title === "pile3") {
+            pile3 = msg.message.description
+            closePile()
+        }
     }
 })
 
@@ -54,29 +55,7 @@ pubnub.subscribe({
     channels: ['MagicWinston']
 });
 
-function publishSampleMessage() {
-    var publishConfig = {
-        channel : "hello_world",
-        message: {
-            title: "greeting",
-            description: "hello world!"
-        }
-    }
-    pubnub.publish(publishConfig, function(status, response) {
-        console.log(status, response);
-    })
-}
 
-
-
-
-
-
-let totalCardArray = []
-let pile1 = []
-let pile2 = []
-let pile3 = []
-let userHand = []
 
 
 function cardURLLookup (cardName) {
@@ -152,6 +131,15 @@ searchButton.click (function () {
         addCardToPile(pile2)
         addCardToPile(pile3)
         makePileUI()
+
+        let cardsCondensed= []
+
+        totalCardArray.forEach(item => cardsCondensed.push({id: item.id, imageUrl: item.imageUrl, name: item.name}))
+
+        publishPileChange("library", totalCardArray)
+        publishPileChange("pile1", pile1)
+        publishPileChange("pile2", pile2)
+        publishPileChange("pile3", pile3)
     })
 })
 
@@ -271,15 +259,41 @@ function makePileUI () {
         $("form").show()
         $("#userHand").remove()
         closePile()
+        pilesVisible = false
         pile1 = []
         pile2 = []
         pile3 = []
         totalCardArray = []
         userHand = []
+        publishPileChange("library", totalCardArray)
+        publishPileChange("pile1", pile1)
+        publishPileChange("pile2", pile2)
+        publishPileChange("pile3", pile3)
     })
     DragDropManager()
+    pilesVisible = true
 }
 
+
+
+function publishPileChange (pileToChange, infoToChange) {
+    pubnub.publish(
+        {
+            message: {
+                title: pileToChange,
+                description: infoToChange
+            },
+            channel: 'MagicWinston'
+        },
+        function (status, response) {
+            if (status.error) {
+                console.log(status)
+            } else {
+                console.log("message Published w/ timetoken", response.timetoken)
+            }
+        }
+    );
+}
 
 
 function DragDropManager () {
@@ -290,6 +304,8 @@ function DragDropManager () {
     pile1Section.ondrop = event => {
         event.preventDefault()
         addCardToPile(pile1)
+        publishPileChange("pile1", pile1)
+        publishPileChange("library", totalCardArray)
         M.toast({html: "Card Added To Pile 1", classes: "move"})
         closePile()
     }
@@ -301,6 +317,8 @@ function DragDropManager () {
     pile2Section.ondrop = event => {
         event.preventDefault()
         addCardToPile(pile2)
+        publishPileChange("pile2", pile2)
+        publishPileChange("library", totalCardArray)
         M.toast({html: "Card Added To Pile 2", classes: "move"})
         closePile()
     }
@@ -312,6 +330,8 @@ function DragDropManager () {
     pile3Section.ondrop = event => {
         event.preventDefault()
         addCardToPile(pile3)
+        publishPileChange("pile3", pile3)
+        publishPileChange("library", totalCardArray)
         M.toast({html: "Card Added To Pile 3", classes: "move"})
         closePile()
     }
