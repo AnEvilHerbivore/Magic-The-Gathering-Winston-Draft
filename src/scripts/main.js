@@ -210,6 +210,8 @@ function takePile () {
         userHand = userHand.concat(pile1)
         pile1 = []
         addCardToPile(pile1)
+        publishPileChange("library", totalCardArray)
+        publishPileChange("pile1", pile1)
         closePile()
         if (pile1.length === 0) {
             $("#pile1 img").css("visibility", "hidden")
@@ -218,6 +220,8 @@ function takePile () {
         userHand = userHand.concat(pile2)
         pile2 = []
         addCardToPile(pile2)
+        publishPileChange("library", totalCardArray)
+        publishPileChange("pile2", pile2)
         closePile()
         if (pile2.length === 0) {
             $("#pile2 img").css("visibility", "hidden")
@@ -226,6 +230,8 @@ function takePile () {
         userHand = userHand.concat(pile3)
         pile3 = []
         addCardToPile(pile3)
+        publishPileChange("library", totalCardArray)
+        publishPileChange("pile3", pile3)
         closePile()
         if (pile3.length === 0) {
             $("#pile3 img").css("visibility", "hidden")
