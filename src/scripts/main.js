@@ -34,6 +34,9 @@ pubnub.addListener({
     message: function(msg) {
         if (msg.message.title === "library") {
             totalCardArray = msg.message.description
+            if (totalCardArray.length === 0) {
+                $("#library img").css("visibility", "hidden")
+            }
             if (pilesVisible === false) {
                 makePileUI()
                 $("form").hide()
@@ -111,7 +114,6 @@ function addCardToPile (pileToAddTo) {
         pileToAddTo.push(totalCardArray.shift())
         if (totalCardArray.length === 0) {
             $("#library img").css("visibility", "hidden")
-            $("#library h4").fadeIn()
         }
     }
 }
@@ -231,7 +233,8 @@ function draftFinished () {
         && pile3.length === 0
         && totalCardArray.length === 0) {
             $("#selectionArea").remove()
-            $("#content").append("<input type='button' value='Save Hand' id='saveHandBtn'>")
+            $("#saveHandBtn").remove()
+            $("#newDraftBtn").after("<input type='button' value='Save Hand' id='saveHandBtn'>")
             $("#saveHandBtn").click(function () {
                 let userHandNames = []
                 userHand.forEach(card => userHandNames.push(card.name))
