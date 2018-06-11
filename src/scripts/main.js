@@ -34,7 +34,7 @@ pubnub.addListener({
     message: function(msg) {
         if (msg.message.title === "library") {
             totalCardArray = msg.message.description
-            if (pilesVisible ===false) {
+            if (pilesVisible === false) {
                 makePileUI()
                 $("form").hide()
             }
@@ -47,6 +47,19 @@ pubnub.addListener({
         } else if (msg.message.title === "pile3") {
             pile3 = msg.message.description
             closePile()
+        } else if (msg.message.title === "newDraft") {
+            $("#selectionArea").empty()
+            $("#newDraftBtn").remove()
+            $("form").show()
+            $("#userHand").remove()
+            closePile()
+            pilesVisible = false
+            pile1 = []
+            pile2 = []
+            pile3 = []
+            totalCardArray = []
+            userHand = []
+            $("#saveHandBtn").remove()
         }
     }
 })
@@ -105,7 +118,6 @@ searchButton.click (function () {
         if (!isNaN(firstLetter)) {
            let cardArray = element.split(" ")
            cardArray.shift()
-        //    console.log(cardArray)
            const nameWithoutNum = cardArray.reduce(function (current, next) {
                return current += ` ${next}`
            })
@@ -135,6 +147,7 @@ searchButton.click (function () {
         let cardsCondensed= []
 
         totalCardArray.forEach(item => cardsCondensed.push({id: item.id, imageUrl: item.imageUrl, name: item.name}))
+        totalCardArray = cardsCondensed
 
         publishPileChange("library", totalCardArray)
         publishPileChange("pile1", pile1)
@@ -147,7 +160,9 @@ searchButton.click (function () {
 function pileClick () {
     if ($(this).children("img").css("visibility") === "visible") {
         $("#pileDisplaySection").remove()
-        $("#newDraftBtn").after("<section id='pileDisplaySection'></section>")
+        if (this.id !== "library") {
+            $("#newDraftBtn").after("<section id='pileDisplaySection'></section>")
+        }
         const pileDisplaySection = $("#pileDisplaySection")
         let pileActivated
         switch (this.id) {
@@ -162,22 +177,34 @@ function pileClick () {
             $("#pileDisplaySection").addClass("pile2")
             break;
             case "pile3":
-            pileActivated = pile3
-            pileDisplaySection.append("<h1>Pile 3</h1>")
-            $("#pileDisplaySection").addClass("pile3")
+                pileActivated = pile3
+                pileDisplaySection.append("<h1>Pile 3</h1>")
+                $("#pileDisplaySection").addClass("pile3")
             break;
             case "library":
-            return
+            if (totalCardArray.length !== 0) {
+                userHand.push(totalCardArray.shift())
+                publishPileChange("library", totalCardArray)
+                if (totalCardArray.length === 0) {
+                    $("#library img").css("visibility", "hidden")
+                    $("#library h4").fadeIn()
+                }
+            }
+            displayUserHand()
+            break;
+
+            draftFinished()
         }
 
         pileDisplaySection.append("<section id='cardImageSection' class='cardPiles'></section>")
         const cardImageSection = $("#cardImageSection")
 
         // pileDisplaySection.appendChild(pileDisplayHeader)
+        if (this.id !== "library") {
         pileActivated.forEach(element => {
             cardImageSection.append(`<img src = '${element.imageUrl}' alt = '${element.name}' draggable='false'></img> `)
         });
-
+    }
 
 
         pileDisplaySection.append("<section id='pileDisplayBtns'><input type='button' value='Take Pile' class='takePileBtn'><input type='button' value='Close Pile' class='closePileBtn'></section>")
@@ -185,6 +212,23 @@ function pileClick () {
         $(".closePileBtn").click(closePile)
         $(".takePileBtn").click(takePile)
     }
+}
+
+
+function draftFinished () {
+    if (pile1.length === 0
+        && pile2.length === 0
+        && pile3.length === 0
+        && totalCardArray.length === 0) {
+            $("#selectionArea").remove()
+            $("#content").append("<input type='button' value='Save Hand' id='saveHandBtn'>")
+            $("#saveHandBtn").click(function () {
+                let userHandNames = []
+                userHand.forEach(card => userHandNames.push(card.name))
+                let blob = new Blob([userHandNames.join("\n")], {type: "text/plain;charset=utf-8"})
+                FileSaver.saveAs(blob, "NewDraft.txt")
+            })
+        }
 }
 
 function displayUserHand () {
@@ -238,6 +282,7 @@ function takePile () {
         }
     }
     displayUserHand()
+    draftFinished()
 }
 
 function makePileUI () {
@@ -254,7 +299,7 @@ function makePileUI () {
     selectionArea.prepend("<section class=\"cardPile clickable\" id=\"pile1\"><h1>Pile 1</h1><img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
 
-    selectionArea.prepend("<section class=\"cardPile\" id=\"library\">\n<h1>Library</h1><img src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
+    selectionArea.prepend("<section class=\"cardPile clickable\" id=\"library\">\n<h1>Library</h1><img src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\"></img></section>")
 
 
     body.prepend("<input type='button' value='New Draft' id='newDraftBtn'>")
@@ -262,6 +307,7 @@ function makePileUI () {
     $(".clickable").click(pileClick)
     $("#newDraftBtn").click(function () {
         $("#selectionArea").empty()
+        $("#newDraftBtn").remove()
         $("form").show()
         $("#userHand").remove()
         closePile()
@@ -271,15 +317,34 @@ function makePileUI () {
         pile3 = []
         totalCardArray = []
         userHand = []
-        publishPileChange("library", totalCardArray)
+        $("#saveHandBtn").remove()
         publishPileChange("pile1", pile1)
         publishPileChange("pile2", pile2)
         publishPileChange("pile3", pile3)
+        publishPileChange("library", totalCardArray)
+        pubnub.publish(
+            {
+                message: {
+                    title: "newDraft"
+                },
+                channel: 'MagicWinston'
+            },
+            function (status, response) {
+                if (status.error) {
+                    console.log(status)
+                }
+            }
+        )
     })
     DragDropManager()
     pilesVisible = true
 }
 
+
+function countPile (pileToCount) {
+   let count = pileToCount.length
+   $("")
+}
 
 
 function publishPileChange (pileToChange, infoToChange) {
@@ -294,8 +359,6 @@ function publishPileChange (pileToChange, infoToChange) {
         function (status, response) {
             if (status.error) {
                 console.log(status)
-            } else {
-                console.log("message Published w/ timetoken", response.timetoken)
             }
         }
     );
