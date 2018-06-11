@@ -41,12 +41,21 @@ pubnub.addListener({
         } else if (msg.message.title === "pile1") {
             pile1 = msg.message.description
             closePile()
+            if (pile1.length === 0) {
+                $("#pile1 img").css("visibility", "hidden")
+            }
         } else if (msg.message.title === "pile2") {
             pile2 = msg.message.description
             closePile()
+            if (pile2.length === 0) {
+                $("#pile2 img").css("visibility", "hidden")
+            }
         } else if (msg.message.title === "pile3") {
             pile3 = msg.message.description
             closePile()
+            if (pile3.length === 0) {
+                $("#pile3 img").css("visibility", "hidden")
+            }
         } else if (msg.message.title === "newDraft") {
             $("#selectionArea").empty()
             $("#newDraftBtn").remove()
@@ -61,6 +70,7 @@ pubnub.addListener({
             userHand = []
             $("#saveHandBtn").remove()
         }
+        draftFinished()
     }
 })
 
