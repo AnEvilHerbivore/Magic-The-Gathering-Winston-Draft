@@ -73,6 +73,7 @@ pubnub.addListener({
             userHand = []
             $("#saveHandBtn").remove()
         }
+        countPile()
         draftFinished()
     }
 })
@@ -115,6 +116,7 @@ function addCardToPile (pileToAddTo) {
         if (totalCardArray.length === 0) {
             $("#library img").css("visibility", "hidden")
         }
+        countPile()
     }
 }
 
@@ -194,15 +196,21 @@ function pileClick () {
                 $("#pileDisplaySection").addClass("pile3")
             break;
             case "library":
-            if (totalCardArray.length !== 0) {
-                userHand.push(totalCardArray.shift())
-                publishPileChange("library", totalCardArray)
-                if (totalCardArray.length === 0) {
-                    $("#library img").css("visibility", "hidden")
-                    $("#library h4").fadeIn()
+                if (totalCardArray.length !== 0) {
+                    // let txt;
+                    let r = confirm("Take card from top of Library?");
+                    if (r === true) {
+                        userHand.push(totalCardArray.shift())
+                        publishPileChange("library", totalCardArray)
+                        if (totalCardArray.length === 0) {
+                            $("#library img").css("visibility", "hidden")
+                            $("#library h4").fadeIn()
+                            displayUserHand()
+                        }
+                    } else {
+                    }
+                    
                 }
-            }
-            displayUserHand()
             break;
 
             draftFinished()
@@ -295,6 +303,7 @@ function takePile () {
         }
     }
     displayUserHand()
+    countPile()
     draftFinished()
 }
 
@@ -349,14 +358,25 @@ function makePileUI () {
             }
         )
     })
+    countPile()
     DragDropManager()
     pilesVisible = true
 }
 
 
-function countPile (pileToCount) {
-   let count = pileToCount.length
-   $("")
+function countPile () {
+   let count = totalCardArray.length
+   $(`#libraryCount`).remove()
+   $(`#library`).append(`<h4 class="pileCount" id="libraryCount">${count} Cards</h4>`)
+   count = pile1.length
+   $(`#pile1Count`).remove()
+   $(`#pile1`).append(`<h4 class="pileCount" id="pile1Count">${count} Cards</h4>`)
+   count = pile2.length
+   $(`#pile2Count`).remove()
+   $(`#pile2`).append(`<h4 class="pileCount" id="pile2Count">${count} Cards</h4>`)
+   count = pile3.length
+   $(`#pile3Count`).remove()
+   $(`#pile3`).append(`<h4 class="pileCount" id="pile3Count">${count} Cards</h4>`)
 }
 
 
