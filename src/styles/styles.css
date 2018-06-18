@@ -143,3 +143,9 @@ form input {
     height: 2em;
     width: 8em;
 }
+
+#handImages {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
