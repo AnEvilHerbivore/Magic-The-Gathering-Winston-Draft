@@ -4,18 +4,12 @@ const pileManager = Object.create({}, {
     DragDropManager: {
         value: function () {
             const gameManager = require("./gameManager")
-            const displayManager = require("./displayManager")
             const pile1Section = document.querySelector("#pile1")
             pile1Section.ondragover = event => {
                 event.preventDefault()
             }
             pile1Section.ondrop = event => {
-                event.preventDefault()
-                pileManager.addCardToPile(gameManager.pile1)
-                pubNubManager.publishPileChange("pile1", gameManager.pile1)
-                pubNubManager.publishPileChange("library", gameManager.totalCardArray)
-                M.toast({html: "Card Added To Pile 1", classes: "move"})
-                displayManager.closePile()
+                pileManager.dropEvent(event, gameManager.pile1, "pile1")
             }
         
             const pile2Section = document.querySelector("#pile2")
@@ -23,12 +17,7 @@ const pileManager = Object.create({}, {
                 event.preventDefault()
             }
             pile2Section.ondrop = event => {
-                event.preventDefault()
-                pileManager.addCardToPile(gameManager.pile2)
-                pubNubManager.publishPileChange("pile2", gameManager.pile2)
-                pubNubManager.publishPileChange("library", gameManager.totalCardArray)
-                M.toast({html: "Card Added To Pile 2", classes: "move"})
-                displayManager.closePile()
+                pileManager.dropEvent(event, gameManager.pile2, "pile2")
             }
         
             const pile3Section = document.querySelector("#pile3")
@@ -36,16 +25,24 @@ const pileManager = Object.create({}, {
                 event.preventDefault()
             }
             pile3Section.ondrop = event => {
-                event.preventDefault()
-                pileManager.addCardToPile(gameManager.pile3)
-                pubNubManager.publishPileChange("pile3", gameManager.pile3)
-                pubNubManager.publishPileChange("library", gameManager.totalCardArray)
-                M.toast({html: "Card Added To Pile 3", classes: "move"})
-                displayManager.closePile()
+                pileManager.dropEvent(event, gameManager.pile3, "pile3")
             }
         }
     },
     
+    //Function to execute when a card is dropped onto a pile, accepts the drop event, the pile, and the string name of the pile as parameters.
+    dropEvent: {
+        value: function (event, pileDropped, pileDroppedName) {
+            const gameManager = require("./gameManager")
+            const displayManager = require("./displayManager")
+            event.preventDefault()
+            pileManager.addCardToPile(pileDropped)
+            pubNubManager.publishPileChange(pileDroppedName, pileDropped)
+            pubNubManager.publishPileChange("library", gameManager.totalCardArray)
+            M.toast({html: "Card Added To Pile", classes: "move"})
+            displayManager.closePile()
+        }
+    },
 
     //Function to randomize the order of an array, used in order to "shuffle" the piles
     shuffle: {
@@ -62,13 +59,13 @@ const pileManager = Object.create({}, {
         value: function () {
             const gameManager = require("./gameManager")
             const displayManager = require("./displayManager")
-            let $currentSection = $(this)
-            if ($currentSection.parent().parent().hasClass("pile1")) {
-                pileAction(gameManager.pile1, "pile1")
-            } else if ($currentSection.parent().parent().hasClass("pile2")) {
-                pileAction(gameManager.pile2, "pile2")
-            } else if ($currentSection.parent().parent().hasClass("pile3")) {
-                pileAction(gameManager.pile3, "pile3")
+            let $currentSection = $(this).parent().parent()
+            if ($currentSection.hasClass("pile1")) {
+                pileManager.pileAction(gameManager.pile1, "pile1")
+            } else if ($currentSection.hasClass("pile2")) {
+                pileManager.pileAction(gameManager.pile2, "pile2")
+            } else if ($currentSection.hasClass("pile3")) {
+                pileManager.pileAction(gameManager.pile3, "pile3")
             }
             displayManager.closePile()
             displayManager.displayUserHand()
@@ -79,6 +76,8 @@ const pileManager = Object.create({}, {
 
     pileAction: {
         value: function (pileInput, pileInputName) {
+            const gameManager = require("./gameManager")
+            const displayManager = require("./displayManager")
             gameManager.userHand = gameManager.userHand.concat(pileInput)
             pileInput = []
             pileManager.addCardToPile(pileInput)
@@ -126,7 +125,6 @@ const pileManager = Object.create({}, {
                                     $("#library h4").fadeIn()
                                 }
                                 displayManager.displayUserHand()
-                            } else {
                             }
                             
                         }

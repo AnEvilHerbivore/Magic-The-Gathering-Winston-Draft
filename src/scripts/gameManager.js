@@ -40,10 +40,6 @@ const gameManager = Object.create({},{
     //This function starts the new draft and is called when the search button is clicked
     startDraft: {
         value: function () {
-            //Adds "working..." message to the dom to let players know that the function is performing correctly during promise resolution delay
-            displayManager.body.append("<h1>Working...<h1>")
-            //Hides the card list input field and search button
-            $("form").hide()
             //creates empty array to hold promises for Promise.all
             let promises = []
             //get the value of the card list textarea and trim off excess whitespace
@@ -53,60 +49,62 @@ const gameManager = Object.create({},{
             //loop through the array of card names
             if (cardList.length > 146) {
                 alert("Too many cards")
-            }
-            cardList.forEach(element => {
-                //trim the name of excess whitespace
-                element = element.trim()
-                //find the first character of the name provided
-                const firstLetter = element.split("")[0]
-                //If the first character is a number, split the element into an array, shift the first index off the array, combine the array back into a string. This removes any numbers from the front of the card names, as this is a common format for card lists to be saved in
-                if (!isNaN(firstLetter)) {
-                let cardArray = element.split(" ")
-                cardArray.shift()
-                const nameWithoutNum = cardArray.reduce(function (current, next) {
-                    return current += ` ${next}`
-                })
-                element = nameWithoutNum
-                }
-                //creates a promise to look up the card in the Magic the Gathering API based off of the card's name, and pushes that promise into the promises array
-                promises.push(apiManger.cardLookup(element).then(cardObj => {
-                    return cardObj
-                }))
-            });
-            //waits for all card objects to be returned 
-            Promise.all(promises).then(function(values){
-                //removes the "working..." message
-                $("body h1").remove()
+            } else if (cardList.length === 1) {
+                alert("Enter a list of cards")
+            } else {
+                //Adds "working..." message to the dom to let players know that the function is performing correctly during promise resolution delay
+                displayManager.body.append("<h1>Working...<h1>")
+                //Hides the card list input field and search button
+                $("form").hide()
+                cardList.forEach(element => {
+                    //trim the name of excess whitespace
+                    element = element.trim()
+                    //find the first character of the name provided
+                    const firstLetter = element.split("")[0]
+                    //If the first character is a number, split the element into an array, shift the first index off the array, combine the array back into a string. This removes any numbers from the front of the card names, as this is a common format for card lists to be saved in
+                    if (!isNaN(firstLetter)) {
+                    let cardArray = element.split(" ")
+                    cardArray.shift()
+                    const nameWithoutNum = cardArray.reduce(function (current, next) {
+                        return current += ` ${next}`
+                    })
+                    element = nameWithoutNum
+                    }
+                    //creates a promise to look up the card in the Magic the Gathering API based off of the card's name, and pushes that promise into the promises array
+                    promises.push(apiManger.cardLookup(element).then(cardObj => {
+                        return cardObj
+                    }))
+                });
+                //waits for all card objects to be returned 
+                Promise.all(promises).then(function(values){
+                    //removes the "working..." message
+                    $("body h1").remove()
 
-                //assigns the array of returned card objects and assigns it to the totalCardArray
-                gameManager.totalCardArray = values
+                    //assigns the array of returned card objects and assigns it to the totalCardArray
+                    gameManager.totalCardArray = values
 
-                //Total card array is shuffled, piles are created based on the shuffled array
-                gameManager.totalCardArray = pileManager.shuffle(gameManager.totalCardArray)
-                pileManager.addCardToPile(gameManager.pile1)
-                pileManager.addCardToPile(gameManager.pile2)
-                pileManager.addCardToPile(gameManager.pile3)
+                    //Total card array is shuffled, piles are created based on the shuffled array
+                    gameManager.totalCardArray = pileManager.shuffle(gameManager.totalCardArray)
+                    pileManager.addCardToPile(gameManager.pile1)
+                    pileManager.addCardToPile(gameManager.pile2)
+                    pileManager.addCardToPile(gameManager.pile3)
 
-                //Makes the UI for the draft to proceed
-                displayManager.makePileUI()
-        
-                //Creates an array to hold the id, imageURL, and name of each card.This condenses the information in order to be able to pass it through PubNub
-                let cardsCondensed= []
-                gameManager.totalCardArray.forEach(item => cardsCondensed.push({id: item.id, imageUrl: item.imageUrl, name: item.name}))
-                gameManager.totalCardArray = cardsCondensed
-                
+                    //Makes the UI for the draft to proceed
+                    displayManager.makePileUI()
+            
+                    //Creates an array to hold the id, imageURL, and name of each card.This condenses the information in order to be able to pass it through PubNub
+                    let cardsCondensed= []
+                    gameManager.totalCardArray.forEach(item => cardsCondensed.push({id: item.id, imageUrl: item.imageUrl, name: item.name}))
+                    gameManager.totalCardArray = cardsCondensed
+                    
 
-                if ( gameManager.totalCardArray.length > 145 ) {
-
-                } else {
                     pubNubManager.publishPileChange("library", gameManager.totalCardArray)
-                }
-
-                //Send pile information through the socket
-                pubNubManager.publishPileChange("pile1", gameManager.pile1)
-                pubNubManager.publishPileChange("pile2", gameManager.pile2)
-                pubNubManager.publishPileChange("pile3", gameManager.pile3)
-            })
+                    //Send pile information through the socket
+                    pubNubManager.publishPileChange("pile1", gameManager.pile1)
+                    pubNubManager.publishPileChange("pile2", gameManager.pile2)
+                    pubNubManager.publishPileChange("pile3", gameManager.pile3)
+                })
+            }
         }
     },
     
@@ -134,18 +132,20 @@ const gameManager = Object.create({},{
     newGame: {
         //Function resets the game to the initial state of the program to allow a new draft to start without needing to refresh. 
         value: function () {
+            //Removes UI elements, unhides the form for entering in new cards for the draft
             $("#selectionArea").empty()
             $("#newDraftBtn").remove()
             $("form").show()
             $("#userHand").remove()
+            $("#saveHandBtn").remove()
             displayManager.closePile()
+            //changes gameplay variables back to initial state
             displayManager.pilesVisible = false
             gameManager.pile1 = []
             gameManager.pile2 = []
             gameManager.pile3 = []
             gameManager.totalCardArray = []
             gameManager.userHand = []
-            $("#saveHandBtn").remove()
             //Sends empty data to the opponent to reset their draft as well. New draft message tells recieving computer to empty draft area contents and display card list form.
             pubNubManager.publishPileChange("pile1", gameManager.pile1)
             pubNubManager.publishPileChange("pile2", gameManager.pile2)

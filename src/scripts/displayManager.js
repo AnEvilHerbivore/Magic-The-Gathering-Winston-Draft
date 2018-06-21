@@ -35,7 +35,7 @@ const displayManager = Object.create({}, {
             $("#pileDisplaySection").remove()
         }
     },
-
+    //function checks if a pile is empty, if yes it sets the image for the pile to hidden so it disappears but still retians space on the DOM
     isEmpty: {
         value: function (pileName, pileToCheck) {
             if (pileToCheck.length === 0) {
@@ -43,6 +43,7 @@ const displayManager = Object.create({}, {
             }
         }
     },
+    //Creates the UI for each pile, and adds event listeners to them for clicks.
     makePileUI: {
         value: function () {
             const gameManager = require("./gameManager")
