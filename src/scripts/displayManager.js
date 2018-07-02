@@ -53,10 +53,12 @@ const displayManager = Object.create({}, {
             const selectionArea = $("#selectionArea")
 
             for (let i= 1; i <= 3; i++) {
-                selectionArea.prepend(`<section class="cardPile clickable" id="pile${i}">
-                                        <h1>Pile ${i}</h1>
-                                        <img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\" alt='Card Back'></img>
-                                        </section>`)
+                selectionArea.append(`
+                <section class="cardPile clickable" id="pile${i}">
+                    <h1>Pile ${i}</h1>
+                    <img draggable=\"false\" src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\" alt='Card Back'></img>
+                </section>
+                `)
             }
 
             selectionArea.prepend("<section class=\"cardPile clickable\" id=\"library\">\n<h1>Library</h1><img src=\"http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=0&type=card\" alt='Card Back'></img></section>")

@@ -36,6 +36,8 @@ const gameManager = Object.create({},{
         writable: true,
         enumerable: true
     },
+
+
     
     //This function starts the new draft and is called when the search button is clicked
     startDraft: {
@@ -49,11 +51,11 @@ const gameManager = Object.create({},{
             //loop through the array of card names
             if (cardList.length > 146) {
                 alert("Too many cards")
-            } else if (cardList.length === 1) {
-                alert("Enter a list of cards")
+            } else if (cardList.length < 4) {
+                alert("You need more cards")
             } else {
                 //Adds "working..." message to the dom to let players know that the function is performing correctly during promise resolution delay
-                displayManager.body.append("<h1>Working...<h1>")
+                displayManager.body.append("<h1 id='working'>Working...<h1>")
                 //Hides the card list input field and search button
                 $("form").hide()
                 cardList.forEach(element => {
@@ -78,7 +80,7 @@ const gameManager = Object.create({},{
                 //waits for all card objects to be returned 
                 Promise.all(promises).then(function(values){
                     //removes the "working..." message
-                    $("body h1").remove()
+                    $("#working").remove()
 
                     //assigns the array of returned card objects and assigns it to the totalCardArray
                     gameManager.totalCardArray = values
@@ -98,11 +100,12 @@ const gameManager = Object.create({},{
                     gameManager.totalCardArray = cardsCondensed
                     
 
-                    pubNubManager.publishPileChange("library", gameManager.totalCardArray)
                     //Send pile information through the socket
                     pubNubManager.publishPileChange("pile1", gameManager.pile1)
                     pubNubManager.publishPileChange("pile2", gameManager.pile2)
                     pubNubManager.publishPileChange("pile3", gameManager.pile3)
+                    //Pile needs to be published last for edge case
+                    pubNubManager.publishPileChange("library", gameManager.totalCardArray)
                 })
             }
         }
@@ -147,10 +150,6 @@ const gameManager = Object.create({},{
             gameManager.totalCardArray = []
             gameManager.userHand = []
             //Sends empty data to the opponent to reset their draft as well. New draft message tells recieving computer to empty draft area contents and display card list form.
-            pubNubManager.publishPileChange("pile1", gameManager.pile1)
-            pubNubManager.publishPileChange("pile2", gameManager.pile2)
-            pubNubManager.publishPileChange("pile3", gameManager.pile3)
-            pubNubManager.publishPileChange("library", gameManager.totalCardArray)
             pubNubManager.publishPileChange("newDraft")
         }
     }

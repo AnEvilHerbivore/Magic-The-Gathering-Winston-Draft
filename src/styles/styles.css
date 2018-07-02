@@ -103,6 +103,10 @@ form input {
 
 }
 
+form {
+    top: 20px;
+}
+
 #selectionArea {
     display: flex;
     align-items: flex-start;
