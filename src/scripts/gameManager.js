@@ -125,7 +125,7 @@ const gameManager = Object.create({},{
                         //Creates an array of the names of each of the cards in the players hand, then saves it as a .txt file seperated by the return character (a common format for importing/exporting card lists in the Magic: The Gathering Community). Default save name is "NewDraft.txt"
                         let userHandNames = []
                         gameManager.userHand.forEach(card => userHandNames.push(card.name))
-                        let blob = new Blob([userHandNames.join("\n")], {type: "text/plain;charset=utf-8"})
+                        let blob = new Blob([userHandNames.join("\r\n")], {type: "text/plain;charset=utf-8"})
                         FileSaver.saveAs(blob, "NewDraft.txt")
                     })
                 }
